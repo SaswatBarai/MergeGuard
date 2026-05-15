@@ -4,7 +4,8 @@
 This phase implements the persistent storage layer for the platform's microservices. Following the architectural design, PostgreSQL is used as the primary database. To ensure type safety and seamless integration with the TypeScript Express.js microservices, Prisma ORM is utilized. This phase establishes the core entities needed to track users, repositories, review jobs, individual agent findings, and the final synthesized reports.
 
 ### Detailed Implementation Guide
-1. **Database Provisioning**: Add a PostgreSQL container to the existing `docker-compose.yml` to serve as the local development database. Add a volume mount to persist data between container restarts.
+1. **Schema Design & Documentation**: Design the core data models including RBAC, Audit Trails, and specialized agent results. Document the schema in `docs/schema.md`.
+2. **Database Provisioning**: Add a PostgreSQL container to the existing `docker-compose.yml` to serve as the local development database.
 2. **Prisma Setup**: Initialize Prisma (`npx prisma init`) within a shared TypeScript package (e.g., `packages/db`) or directly within the services that need database access (Auth, Review, Notification).
 3. **Schema Definition**: Define the `schema.prisma` file with the core data models:
    - `User`: Stores GitHub profile data, OAuth tokens, and system preferences.

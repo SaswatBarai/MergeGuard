@@ -1,18 +1,21 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
+import { config } from './config/index.js';
+import authRoutes from './routes/auth.routes.js';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
+app.use(cors());
 app.use(express.json());
 
+// Mount Routes
+app.use('/auth', authRoutes);
+
+// Health Check
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'auth-service' });
 });
 
-app.get('/', (_req: Request, res: Response) => {
-  res.json({ message: 'Auth Service is running' });
-});
-
-app.listen(PORT, () => {
-  console.log(`auth-service running on port ${PORT}`);
+app.listen(config.port, () => {
+  console.log(`auth-service running on port ${config.port}`);
 });

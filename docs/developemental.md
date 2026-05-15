@@ -26,14 +26,14 @@ This document outlines the 15-phase development plan for the AI-Powered Multi-Ag
 
 ## Phase 3: Auth Service & GitHub OAuth Integration
 **Tasks to complete:**
-- Implement the GitHub OAuth flow in the Auth Service.
-- Set up user creation and JWT issuance upon successful GitHub login.
-- Implement repository access permission syncing.
-- Create API Key generation and management endpoints for the CLI.
+- [x] Implement the GitHub OAuth flow in the Auth Service.
+- [x] Set up user creation and JWT issuance upon successful GitHub login.
+- [x] Implement repository access permission syncing.
+- [x] Create API Key generation and management endpoints for the CLI.
 
 **Completion check:**
-- [ ] User can authenticate via GitHub and receive a valid JWT.
-- [ ] User can generate an API key via an API endpoint.
+- [x] User can authenticate via GitHub and receive a valid JWT.
+- [x] User can generate an API key via an API endpoint.
 
 ## Phase 4: API Gateway & Request Routing
 **Tasks to complete:**

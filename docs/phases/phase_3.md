@@ -11,11 +11,11 @@ This phase introduces identity and access management into the platform by buildi
 5. **CLI API Key Management**: Create secure API endpoints (`/auth/api-keys`) that allow an authenticated user to generate, list, and revoke long-lived API keys. Ensure keys are stored hashed in the database (e.g., using bcrypt) for security.
 
 ### Tasks to complete
-- Implement the GitHub OAuth flow in the Auth Service.
-- Set up user creation and JWT issuance upon successful GitHub login.
-- Implement repository access permission syncing.
-- Create API Key generation and management endpoints for the CLI.
+- [x] Implement the GitHub OAuth flow in the Auth Service.
+- [x] Set up user creation and JWT issuance upon successful GitHub login.
+- [x] Implement repository access permission syncing.
+- [x] Create API Key generation and management endpoints for the CLI.
 
 ### Completion check
-- [ ] User can authenticate via GitHub and receive a valid JWT.
-- [ ] User can generate an API key via an API endpoint.
+- [x] User can authenticate via GitHub and receive a valid JWT.
+- [x] User can generate an API key via an API endpoint.

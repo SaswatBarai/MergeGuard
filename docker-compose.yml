@@ -9,13 +9,22 @@ services:
       - PORT=3000
 
   auth-service:
-    build: ./packages/auth-service
+    build:
+      context: .
+      dockerfile: ./packages/auth-service/Dockerfile
     ports:
       - "3001:3001"
     volumes:
-      - ./packages/auth-service/src:/app/src
+      - ./packages/auth-service/src:/app/packages/auth-service/src
+      - ./packages/db:/app/packages/db
     environment:
       - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mergeguard?schema=public
+      - JWT_SECRET=super-secret-key-change-me
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - GITHUB_REDIRECT_URI=http://localhost:3001/auth/github/callback
+      - FRONTEND_URL=http://localhost:3004
 
   review-service:
     build: ./packages/review-service

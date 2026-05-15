@@ -16,11 +16,11 @@ This phase implements the persistent storage layer for the platform's microservi
 4. **Client Generation & Migrations**: Run `prisma migrate dev` to create the initial database tables and generate the Prisma Client. Export this client so it can be used across the TypeScript microservices to perform strongly-typed CRUD operations.
 
 ### Tasks to complete
-- Provision a local PostgreSQL database via Docker.
-- Initialize Prisma in the TypeScript shared library or directly in the respective services (Auth, Review, Notification).
-- Define the core schema: Users, Profiles, Repositories, Jobs/Reviews, Agent Results, and Final Reports.
-- Generate Prisma clients and write initial database migration scripts.
+- [x] Provision a local PostgreSQL database via Docker.
+- [x] Initialize Prisma in the TypeScript shared library or directly in the respective services (Auth, Review, Notification).
+- [x] Define the core schema: Users, Profiles, Repositories, Jobs/Reviews, Agent Results, and Final Reports.
+- [x] Generate Prisma clients and write initial database migration scripts.
 
 ### Completion check
-- [ ] Database migrations run successfully against the local PostgreSQL instance.
-- [ ] Prisma client is importable and can perform basic CRUD operations in a test script.
+- [x] Database migrations run successfully against the local PostgreSQL instance.
+- [x] Prisma client is importable and can perform basic CRUD operations in a test script.

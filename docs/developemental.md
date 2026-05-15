@@ -15,14 +15,14 @@ This document outlines the 15-phase development plan for the AI-Powered Multi-Ag
 
 ## Phase 2: Database & Core Data Models (Prisma)
 **Tasks to complete:**
-- Provision a local PostgreSQL database via Docker.
-- Initialize Prisma in the TypeScript shared library or directly in the respective services (Auth, Review, Notification).
-- Define the core schema: Users, Profiles, Repositories, Jobs/Reviews, Agent Results, and Final Reports.
-- Generate Prisma clients and write initial database migration scripts.
+- [x] Provision a local PostgreSQL database via Docker.
+- [x] Initialize Prisma in the TypeScript shared library or directly in the respective services (Auth, Review, Notification).
+- [x] Define the core schema: Users, Profiles, Repositories, Jobs/Reviews, Agent Results, and Final Reports.
+- [x] Generate Prisma clients and write initial database migration scripts.
 
 **Completion check:**
-- [ ] Database migrations run successfully against the local PostgreSQL instance.
-- [ ] Prisma client is importable and can perform basic CRUD operations in a test script.
+- [x] Database migrations run successfully against the local PostgreSQL instance.
+- [x] Prisma client is importable and can perform basic CRUD operations in a test script.
 
 ## Phase 3: Auth Service & GitHub OAuth Integration
 **Tasks to complete:**

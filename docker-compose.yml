@@ -1,12 +1,18 @@
 services:
   api-gateway:
-    build: ./packages/api-gateway
+    build:
+      context: .
+      dockerfile: ./packages/api-gateway/Dockerfile
     ports:
       - "3000:3000"
     volumes:
-      - ./packages/api-gateway/src:/app/src
+      - ./packages/api-gateway/src:/app/packages/api-gateway/src
     environment:
       - PORT=3000
+      - JWT_SECRET=super-secret-key-change-me
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - REVIEW_SERVICE_URL=http://review-service:3002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3003
 
   auth-service:
     build:

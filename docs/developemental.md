@@ -37,25 +37,25 @@ This document outlines the 15-phase development plan for the AI-Powered Multi-Ag
 
 ## Phase 4: API Gateway & Request Routing
 **Tasks to complete:**
-- Implement the Express.js API Gateway.
-- Set up JWT validation middleware to protect downstream routes.
-- Configure rate limiting and consistent request logging.
-- Set up proxy routing to the Auth Service (and placeholder routes for Review/Notification).
+- [x] Implement the Express.js API Gateway.
+- [x] Set up JWT validation middleware to protect downstream routes.
+- [x] Configure rate limiting and consistent request logging.
+- [x] Set up proxy routing to the Auth Service (and placeholder routes for Review/Notification).
 
 **Completion check:**
-- [ ] Unauthenticated requests to protected routes return 401 Unauthorized.
-- [ ] Authenticated requests route correctly to the Auth service and return valid responses.
+- [x] Unauthenticated requests to protected routes return 401 Unauthorized.
+- [x] Authenticated requests route correctly to the Auth service and return valid responses.
 
-## Phase 5: Message Broker & Cache (RabbitMQ & Redis)
+## Phase 5: Message Broker & Cache (Kafka & Redis)
 **Tasks to complete:**
-- Add RabbitMQ and Redis to `docker-compose.yml`.
-- Implement a RabbitMQ publisher/consumer shared library or utility for TypeScript services.
-- Implement RabbitMQ and Redis connection logic in the Python AI Orchestrator.
+- Add Kafka and Redis to `docker-compose.yml`.
+- Implement a Kafka publisher/consumer shared library or utility for TypeScript services.
+- Implement Kafka and Redis connection logic in the Python AI Orchestrator.
 - Define the message schema for Review Jobs and AI Results.
 
 **Completion check:**
-- [ ] TypeScript service can publish a test message to RabbitMQ.
-- [ ] Python service can consume the message from RabbitMQ and write state to Redis.
+- [ ] TypeScript service can publish a test message to Kafka.
+- [ ] Python service can consume the message from Kafka and write state to Redis.
 
 ## Phase 6: Python AI Orchestrator & LangGraph Foundation
 **Tasks to complete:**

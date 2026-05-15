@@ -15,11 +15,11 @@ The API Gateway serves as the single, unified entry point for all incoming HTTP 
    - `/api/notifications/*` routes to the Notification Service.
 
 ### Tasks to complete
-- Implement the Express.js API Gateway.
-- Set up JWT validation middleware to protect downstream routes.
-- Configure rate limiting and consistent request logging.
-- Set up proxy routing to the Auth Service (and placeholder routes for Review/Notification).
+- [x] Implement the Express.js API Gateway.
+- [x] Set up JWT validation middleware to protect downstream routes.
+- [x] Configure rate limiting and consistent request logging.
+- [x] Set up proxy routing to the Auth Service (and placeholder routes for Review/Notification).
 
 ### Completion check
-- [ ] Unauthenticated requests to protected routes return 401 Unauthorized.
-- [ ] Authenticated requests route correctly to the Auth service and return valid responses.
+- [x] Unauthenticated requests to protected routes return 401 Unauthorized.
+- [x] Authenticated requests route correctly to the Auth service and return valid responses.

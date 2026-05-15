@@ -17,5 +17,5 @@ This phase introduces the async infrastructure that connects the synchronous Typ
 - Define the message schema for Review Jobs and AI Results.
 
 ### Completion check
-- [ ] TypeScript service can publish a test message to Kafka.
-- [ ] Python service can consume the message from Kafka and write state to Redis.
+- [x] TypeScript service can publish a test message to Kafka.
+- [x] Python service can consume the message from Kafka and write state to Redis.

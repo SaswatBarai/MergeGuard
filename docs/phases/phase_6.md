@@ -17,5 +17,5 @@ This phase establishes the core execution engine of the AI code review pipeline.
 - Implement the orchestration logic to decide the execution path based on dummy state.
 
 ### Completion check
-- [ ] The LangGraph pipeline can execute from start to finish with dummy nodes.
-- [ ] The service can successfully invoke the Claude API with a simple test prompt.
+- [x] The LangGraph pipeline can execute from start to finish with dummy nodes.
+- [x] The service can successfully invoke the Claude API with a simple test prompt.

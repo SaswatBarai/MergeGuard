@@ -80,3 +80,24 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  kafka_data:
+  - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  ai-orchestrator:
+    build: ./ai-orchestrator
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-orchestrator/src:/app/src
+    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:

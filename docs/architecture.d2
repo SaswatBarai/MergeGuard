@@ -1,0 +1,140 @@
+title AI Multi-Agent Code Review Platform on Kubernetes (AWS EKS)
+
+Developer [icon: user]
+Tech Lead [icon: user]
+Engineering Manager [icon: user]
+
+CLI Tool [icon: terminal]
+Web Dashboard [icon: browser]
+
+GitHub [icon: github]
+Claude API [icon: sparkles]
+Slack [icon: slack]
+
+Route53 [icon: aws-route-53]
+CloudFront [icon: aws-cloudfront]
+
+AWS Cloud [icon: aws-cloud] {
+
+  VPC [icon: aws-vpc] {
+
+    Public Subnet [icon: aws-subnet] {
+
+      Internet Gateway [icon: aws-internet-gateway]
+
+      Application Load Balancer [icon: aws-application-load-balancer]
+
+      NAT Gateway [icon: aws-nat-gateway]
+
+    }
+
+    Private Subnet [icon: aws-subnet] {
+
+      Amazon EKS Cluster [icon: aws-eks] {
+
+        Ingress Controller [icon: kubernetes]
+
+        Frontend Pod (Next.js) [icon: kubernetes]
+        API Gateway Pod [icon: kubernetes]
+
+        Review Service Pod [icon: kubernetes]
+        Auth Service Pod [icon: kubernetes]
+        Notification Service Pod [icon: kubernetes]
+
+        AI Orchestrator Pod (LangGraph) [icon: kubernetes]
+
+        Discovery Agent Pod [icon: robot]
+        Security Agent Pod [icon: shield]
+        Performance Agent Pod [icon: gauge]
+        Test Coverage Agent Pod [icon: flask-conical]
+        Architecture Agent Pod [icon: building]
+        Readability Agent Pod [icon: file-text]
+        Summary Agent Pod [icon: scroll-text]
+        Feedback Agent Pod [icon: message-circle]
+
+      }
+
+      RabbitMQ Cluster [icon: aws-amazon-mq]
+
+      Redis Cache [icon: aws-elasticache]
+
+      PostgreSQL Database [icon: aws-rds]
+
+      S3 Report Storage [icon: aws-s3]
+
+    }
+
+    Monitoring Stack [icon: aws-cloudwatch]
+
+    Prometheus [icon: kubernetes]
+
+    Grafana [icon: grafana]
+
+    ECR Container Registry [icon: aws-ecr]
+
+    GitHub Actions CI/CD [icon: github]
+
+  }
+
+}
+
+Developer > CLI Tool
+Tech Lead > Web Dashboard
+Engineering Manager > Web Dashboard
+
+CLI Tool > Application Load Balancer
+Web Dashboard > CloudFront
+
+Route53 > CloudFront
+CloudFront > Application Load Balancer
+
+Application Load Balancer > Ingress Controller
+
+Ingress Controller > Frontend Pod (Next.js)
+Ingress Controller > API Gateway Pod
+
+API Gateway Pod > Auth Service Pod
+API Gateway Pod > Review Service Pod
+API Gateway Pod > Notification Service Pod
+
+Auth Service Pod > GitHub
+
+Review Service Pod > GitHub
+
+Review Service Pod > RabbitMQ Cluster
+
+RabbitMQ Cluster > AI Orchestrator Pod (LangGraph)
+
+AI Orchestrator Pod (LangGraph) > Discovery Agent Pod
+AI Orchestrator Pod (LangGraph) > Security Agent Pod
+AI Orchestrator Pod (LangGraph) > Performance Agent Pod
+AI Orchestrator Pod (LangGraph) > Test Coverage Agent Pod
+AI Orchestrator Pod (LangGraph) > Architecture Agent Pod
+AI Orchestrator Pod (LangGraph) > Readability Agent Pod
+AI Orchestrator Pod (LangGraph) > Summary Agent Pod
+AI Orchestrator Pod (LangGraph) > Feedback Agent Pod
+
+AI Orchestrator Pod (LangGraph) > Claude API
+
+AI Orchestrator Pod (LangGraph) > Redis Cache
+
+Review Service Pod > PostgreSQL Database
+Auth Service Pod > PostgreSQL Database
+Notification Service Pod > PostgreSQL Database
+
+Review Service Pod > S3 Report Storage
+
+Notification Service Pod > Slack
+
+Frontend Pod (Next.js) > Monitoring Stack
+API Gateway Pod > Monitoring Stack
+Review Service Pod > Monitoring Stack
+Auth Service Pod > Monitoring Stack
+Notification Service Pod > Monitoring Stack
+AI Orchestrator Pod (LangGraph) > Monitoring Stack
+
+Prometheus > Grafana
+
+GitHub Actions CI/CD > ECR Container Registry
+
+ECR Container Registry > Amazon EKS Cluster

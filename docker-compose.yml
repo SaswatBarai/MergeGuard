@@ -1,0 +1,52 @@
+services:
+  api-gateway:
+    build: ./packages/api-gateway
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./packages/api-gateway/src:/app/src
+    environment:
+      - PORT=3000
+
+  auth-service:
+    build: ./packages/auth-service
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./packages/auth-service/src:/app/src
+    environment:
+      - PORT=3001
+
+  review-service:
+    build: ./packages/review-service
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./packages/review-service/src:/app/src
+    environment:
+      - PORT=3002
+
+  notification-service:
+    build: ./packages/notification-service
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./packages/notification-service/src:/app/src
+    environment:
+      - PORT=3003
+
+  web-dashboard:
+    build: ./packages/web-dashboard
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./packages/web-dashboard/src:/app/src
+      - ./tsconfig.base.json:/tsconfig.base.json
+
+  ai-orchestrator:
+    build: ./ai-orchestrator
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai-orchestrator/src:/app/src
+    command: uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload

@@ -4,7 +4,7 @@
 
 MergeGuard is a state-of-the-art, language-agnostic code review system designed for high-performance engineering teams. Unlike generic AI wrappers, MergeGuard uses a **coordinated pipeline of specialized agents** to perform deep architectural, security, and performance analysis on Pull Requests, delivering feedback that feels like it came from a senior staff engineer.
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python)](https://www.python.org/)
 [![LangGraph](https://img.shields.io/badge/AI-LangGraph-orange?style=flat-square)](https://github.com/langchain-ai/langgraph)
@@ -96,8 +96,8 @@ Our **LangGraph-powered** orchestrator manages specialized agents:
 ## 💻 Tech Stack
 
 ### **Frontend (The Dashboard)**
-- **Next.js 14 (App Router):** High-performance server components.
-- **Tailwind CSS + Shadcn UI:** Modern, accessible design system.
+- **Next.js 16 (App Router):** Bleeding-edge framework with Turbopack production builds.
+- **Tailwind CSS 4 + Shadcn UI:** CSS-first configuration and high-performance styling engine.
 - **Redux Toolkit:** Management of complex live-stream states.
 - **TanStack Query:** Robust server-state caching and synchronization.
 

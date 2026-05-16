@@ -4,7 +4,7 @@ import { sseService } from '../services/sse.service.js';
 import { config } from '../config/index.js';
 
 export const setupKafkaConsumer = async () => {
-  const consumer = await kafka.getConsumer(config.KAFKA_GROUP_ID);
+  const consumer = await kafka.getConsumer(config.kafka.groupId);
   await consumer.subscribe({
     topics: [TOPICS.AGENT_PROGRESS, TOPICS.REVIEW_JOB_COMPLETED],
     fromBeginning: false,

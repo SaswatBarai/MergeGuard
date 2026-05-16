@@ -17,4 +17,4 @@ This phase implements the Notification Service, which operates reactively by lis
 - Implement GitHub API integration to optionally post review summaries as PR comments.
 
 ### Completion check
-- [ ] A completed review event triggers a simulated or real Slack message and a GitHub PR comment.
+- [x] A completed review event triggers a simulated or real Slack message and a GitHub PR comment.

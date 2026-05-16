@@ -2,7 +2,7 @@ import { prisma } from '@mergeguard/db';
 import { createKafkaManager, TOPICS } from '@mergeguard/events';
 import { config } from '../config/index.js';
 
-const kafka = createKafkaManager(config.KAFKA_CLIENT_ID, config.KAFKA_BOOTSTRAP_SERVERS);
+const kafka = createKafkaManager(config.kafka.clientId, config.kafka.bootstrapServers);
 
 export class ReviewService {
   static async createReview(data: {

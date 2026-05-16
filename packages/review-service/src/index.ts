@@ -10,8 +10,8 @@ const start = async () => {
     console.log('Kafka consumer started');
 
     // Start Server
-    app.listen(config.PORT, () => {
-      console.log(`review-service running on port ${config.PORT}`);
+    app.listen(config.port, () => {
+      console.log(`review-service running on port ${config.port}`);
     });
   } catch (error) {
     console.error('Failed to start review-service:', error);

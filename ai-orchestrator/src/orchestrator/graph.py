@@ -11,6 +11,14 @@ from src.orchestrator.nodes import (
     feedback_node
 )
 
+def should_continue(state: ReviewState):
+    """
+    Determines whether to continue to specialized agents or halt on failure.
+    """
+    if state.get("status") == "failed":
+        return "end"
+    return "continue"
+
 def create_orchestrator_graph():
     # 1. Initialize the graph with our State schema
     workflow = StateGraph(ReviewState)
@@ -30,12 +38,15 @@ def create_orchestrator_graph():
     # Start at discovery
     workflow.set_entry_point("discovery")
 
-    # After discovery, we fan out to all specialized agents in parallel
-    workflow.add_edge("discovery", "security")
-    workflow.add_edge("discovery", "performance")
-    workflow.add_edge("discovery", "testing")
-    workflow.add_edge("discovery", "architecture")
-    workflow.add_edge("discovery", "readability")
+    # Conditional routing after discovery
+    workflow.add_conditional_edges(
+        "discovery",
+        should_continue,
+        {
+            "continue": ["security", "performance", "testing", "architecture", "readability"],
+            "end": END
+        }
+    )
 
     # All specialized agents converge at the summary node
     workflow.add_edge("security", "summary")

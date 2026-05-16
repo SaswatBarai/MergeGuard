@@ -10,6 +10,7 @@ export interface ReviewJobRequestedMessage {
   jobId: number;
   prNumber: number;
   repositoryId: number;
+  fullRepoName: string; // e.g., 'owner/repo'
   branchName?: string;
   githubToken: string;
 }

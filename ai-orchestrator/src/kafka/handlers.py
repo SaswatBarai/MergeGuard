@@ -23,6 +23,7 @@ async def handle_review_job_requested(payload: dict, redis: aioredis.Redis) -> N
         "jobId": job_id,
         "prNumber": message.prNumber,
         "repositoryId": message.repositoryId,
+        "fullRepoName": message.fullRepoName,
         "branchName": message.branchName,
         "status": "pending",
     }
@@ -40,6 +41,7 @@ async def handle_review_job_requested(payload: dict, redis: aioredis.Redis) -> N
             "repository_id": message.repositoryId,
             "pr_number": message.prNumber,
             "branch_name": message.branchName or "main",
+            "full_repo_name": message.fullRepoName,
             "status": "pending",
             "findings": [],
             "completed_agents": [],

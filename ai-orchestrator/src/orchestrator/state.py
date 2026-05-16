@@ -10,12 +10,26 @@ class AgentFinding(TypedDict):
     line_number: Union[int, None]
 
 
+class ContextProfile(TypedDict):
+    languages: List[str]
+    frameworks: List[str]
+    db_layer: Union[str, None]
+    test_frameworks: List[str]
+    system_type: str  # e.g., Web API, Library, CLI
+    files_to_review: List[str]
+
+
 class ReviewState(TypedDict):
     # Basic IDs
     job_id: int
     repository_id: int
     pr_number: int
+    full_repo_name: str
     branch_name: str
+    
+    # Discovery data
+    context_profile: Union[ContextProfile, None]
+    pr_diff: str
     
     # Execution status
     status: str

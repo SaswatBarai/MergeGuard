@@ -7,7 +7,8 @@
     "build": "turbo run build",
     "test": "turbo run test",
     "lint": "turbo run lint",
-    "format": "prettier --write \"packages/**/*.{ts,tsx,json}\""
+    "format": "prettier --write \"packages/**/*.{ts,tsx,json}\"",
+    "cli": "node packages/cli/bin/index.js"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

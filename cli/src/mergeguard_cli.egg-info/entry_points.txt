@@ -1,0 +1,2 @@
+[console_scripts]
+mergeguard = mergeguard_cli.main:app

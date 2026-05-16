@@ -19,5 +19,5 @@ This phase builds the CLI interface for developers who prefer terminal-based wor
 - Implement the interactive prompt for the human-in-the-loop feedback phase.
 
 ### Completion check
-- [ ] User can authenticate the CLI.
-- [ ] User can submit a PR for review, watch live progress in the terminal, provide feedback, and receive the final rendered markdown report.
+- [x] User can authenticate the CLI.
+- [x] User can submit a PR for review, watch live progress in the terminal, provide feedback, and receive the final rendered markdown report.

@@ -1,0 +1,11 @@
+setup.py
+src/mergeguard_cli/__init__.py
+src/mergeguard_cli/api.py
+src/mergeguard_cli/config.py
+src/mergeguard_cli/main.py
+src/mergeguard_cli.egg-info/PKG-INFO
+src/mergeguard_cli.egg-info/SOURCES.txt
+src/mergeguard_cli.egg-info/dependency_links.txt
+src/mergeguard_cli.egg-info/entry_points.txt
+src/mergeguard_cli.egg-info/requires.txt
+src/mergeguard_cli.egg-info/top_level.txt

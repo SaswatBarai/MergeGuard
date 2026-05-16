@@ -17,5 +17,7 @@ This phase implements the first two specialized AI review agents: the Security A
 - Wire these agents into the LangGraph orchestrator.
 
 ### Completion check
-- [ ] Both agents generate findings classified by severity (Critical, High, Medium, Low) based on a sample PR.
-- [ ] Agent outputs are successfully saved to the shared Redis state.
+- [x] Both agents generate findings classified by severity (Critical, High, Medium, Low) based on a sample PR.
+- [x] Agent outputs are successfully saved to the shared Redis state.
+- [x] Jinja2 templating is used for context-aware prompt generation.
+- [x] Parallel execution of agents is implemented in the LangGraph flow.

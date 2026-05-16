@@ -2,10 +2,14 @@ import logging
 from typing import List, Dict, Any
 from src.orchestrator.state import ReviewState, ContextProfile
 from src.orchestrator.analyzer import analyze_context
-from src.cache.client import create_redis_client, set_job_context
+from src.orchestrator.llm import LLMService
+from src.cache.client import create_redis_client, set_job_context, set_job_findings
 from src.services.github import GitHubService
 
 logger = logging.getLogger(__name__)
+
+# Initialize LLM Service
+llm_service = LLMService()
 
 async def discovery_node(state: ReviewState) -> dict:
     logger.info("Node: Discovery [job_id=%s, repo=%s]", state["job_id"], state["full_repo_name"])
@@ -54,49 +58,107 @@ async def discovery_node(state: ReviewState) -> dict:
 
 async def security_node(state: ReviewState) -> dict:
     logger.info("Node: Security [job_id=%s]", state["job_id"])
+    
+    findings = await llm_service.get_findings(
+        "security", 
+        state["context_profile"], 
+        state["pr_diff"]
+    )
+    
+    # Save to Redis
+    redis = create_redis_client()
+    try:
+        await set_job_findings(redis, state["job_id"], "security", findings)
+    finally:
+        await redis.aclose()
+
     return {
         "completed_agents": ["security"],
-        "findings": [{
-            "agent_name": "security",
-            "content": "No major security issues found (Dummy)",
-            "severity": "info",
-            "file_path": None,
-            "line_number": None
-        }]
+        "findings": findings
     }
 
 async def performance_node(state: ReviewState) -> dict:
     logger.info("Node: Performance [job_id=%s]", state["job_id"])
+    
+    findings = await llm_service.get_findings(
+        "performance", 
+        state["context_profile"], 
+        state["pr_diff"]
+    )
+    
+    # Save to Redis
+    redis = create_redis_client()
+    try:
+        await set_job_findings(redis, state["job_id"], "performance", findings)
+    finally:
+        await redis.aclose()
+
     return {
         "completed_agents": ["performance"],
-        "findings": [{
-            "agent_name": "performance",
-            "content": "Performance looks optimal (Dummy)",
-            "severity": "info",
-            "file_path": None,
-            "line_number": None
-        }]
+        "findings": findings
     }
 
 async def testing_node(state: ReviewState) -> dict:
     logger.info("Node: Testing [job_id=%s]", state["job_id"])
+    
+    findings = await llm_service.get_findings(
+        "testing", 
+        state["context_profile"], 
+        state["pr_diff"]
+    )
+    
+    # Save to Redis
+    redis = create_redis_client()
+    try:
+        await set_job_findings(redis, state["job_id"], "testing", findings)
+    finally:
+        await redis.aclose()
+
     return {
         "completed_agents": ["testing"],
-        "findings": []
+        "findings": findings
     }
 
 async def architecture_node(state: ReviewState) -> dict:
     logger.info("Node: Architecture [job_id=%s]", state["job_id"])
+    
+    findings = await llm_service.get_findings(
+        "architecture", 
+        state["context_profile"], 
+        state["pr_diff"]
+    )
+    
+    # Save to Redis
+    redis = create_redis_client()
+    try:
+        await set_job_findings(redis, state["job_id"], "architecture", findings)
+    finally:
+        await redis.aclose()
+
     return {
         "completed_agents": ["architecture"],
-        "findings": []
+        "findings": findings
     }
 
 async def readability_node(state: ReviewState) -> dict:
     logger.info("Node: Readability [job_id=%s]", state["job_id"])
+    
+    findings = await llm_service.get_findings(
+        "readability", 
+        state["context_profile"], 
+        state["pr_diff"]
+    )
+    
+    # Save to Redis
+    redis = create_redis_client()
+    try:
+        await set_job_findings(redis, state["job_id"], "readability", findings)
+    finally:
+        await redis.aclose()
+
     return {
         "completed_agents": ["readability"],
-        "findings": []
+        "findings": findings
     }
 
 async def summary_node(state: ReviewState) -> dict:

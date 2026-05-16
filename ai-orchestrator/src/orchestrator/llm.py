@@ -26,7 +26,7 @@ class LLMService:
         template = env.get_template(template_name)
         return template.render(**context)
 
-    async def get_findings(self, agent_type: str, context_profile: Dict[str, Any], diff: str) -> List[AgentFinding]:
+    async def get_findings(self, agent_type: str, context_profile: Dict[str, Any], diff: str, user_feedback: str = None) -> List[AgentFinding]:
         template_map = {
             "security": "security.j2",
             "performance": "performance.j2",
@@ -40,7 +40,11 @@ class LLMService:
             logger.error("No template found for agent type: %s", agent_type)
             return []
 
-        prompt = self._render_prompt(template_name, {"profile": context_profile, "diff": diff})
+        prompt = self._render_prompt(template_name, {
+            "profile": context_profile, 
+            "diff": diff,
+            "user_feedback": user_feedback
+        })
         
         try:
             # We use a simple prompt for now, but in a real scenario we'd use structured output features
@@ -60,3 +64,33 @@ class LLMService:
         except Exception as exc:
             logger.error("LLM invocation failed for %s: %s", agent_type, exc)
             return []
+
+    async def get_summary(self, context_profile: Dict[str, Any], all_findings: Dict[str, List[AgentFinding]]) -> Dict[str, Any]:
+        """
+        Synthesizes all agent findings into a cohesive executive summary.
+        """
+        prompt = self._render_prompt("summary.j2", {
+            "profile": context_profile, 
+            "all_findings": all_findings
+        })
+        
+        try:
+            response = await self.llm.ainvoke(prompt)
+            content = response.content
+            
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
+            
+            summary = json.loads(content)
+            return summary
+        except Exception as exc:
+            logger.error("LLM summary generation failed: %s", exc)
+            return {
+                "executive_summary": "Failed to generate summary.",
+                "overall_recommendation": "Comment",
+                "critical_blockers": [],
+                "important_suggestions": [],
+                "minor_notes": []
+            }

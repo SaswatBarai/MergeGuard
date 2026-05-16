@@ -41,5 +41,8 @@ class ReviewState(TypedDict):
     # Track which agents have finished
     completed_agents: Annotated[List[str], operator.add]
     
+    # Human in the loop feedback
+    user_feedback: Union[str, None]
+    
     # Metadata and other info
     metadata: Dict[str, any]

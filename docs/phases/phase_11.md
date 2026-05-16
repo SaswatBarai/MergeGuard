@@ -18,4 +18,7 @@ This phase implements the Review Service, the core orchestrator of the TypeScrip
 - Setup AWS S3 (or local MinIO) integration for storing large final reports.
 
 ### Completion check
-- [ ] A client can initiate a review via API, connect to the SSE endpoint, and receive real-time status updates as the Python orchestrator processes the job.
+- [x] A client can initiate a review via API, connect to the SSE endpoint, and receive real-time status updates as the Python orchestrator processes the job.
+- [x] Database persistence for jobs, findings, and summaries implemented.
+- [x] Kafka events bridge Orchestrator and Review Service.
+- [ ] AWS S3 / MinIO integration for raw markdown archival (to be completed in infra step).

@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 from src.orchestrator.state import ReviewState
 from src.orchestrator.nodes import (
     discovery_node,
@@ -18,6 +19,17 @@ def should_continue(state: ReviewState):
     if state.get("status") == "failed":
         return "end"
     return "continue"
+
+def route_after_feedback(state: ReviewState):
+    """
+    Routes the graph based on user feedback.
+    """
+    if state.get("status") == "completed":
+        return "end"
+    
+    # If not completed, we need to decide which agents to re-run.
+    # For now, if feedback is provided, we re-run ALL agents with the feedback context.
+    return "re-run"
 
 def create_orchestrator_graph():
     # 1. Initialize the graph with our State schema
@@ -58,11 +70,24 @@ def create_orchestrator_graph():
     # Summary goes to feedback
     workflow.add_edge("summary", "feedback")
 
-    # Feedback is the end for now
-    workflow.add_edge("feedback", END)
+    # Conditional routing after feedback
+    workflow.add_conditional_edges(
+        "feedback",
+        route_after_feedback,
+        {
+            "re-run": ["security", "performance", "testing", "architecture", "readability"],
+            "end": END
+        }
+    )
 
-    # 4. Compile the graph
-    return workflow.compile()
+    # 4. Initialize Checkpointer
+    memory = MemorySaver()
+
+    # 5. Compile the graph with checkpointer and interrupt
+    return workflow.compile(
+        checkpointer=memory,
+        interrupt_before=["feedback"]
+    )
 
 # Singleton instance
 orchestrator_runnable = create_orchestrator_graph()

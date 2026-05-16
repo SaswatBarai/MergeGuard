@@ -2,8 +2,9 @@ import { Kafka, Producer, Consumer, KafkaConfig } from 'kafkajs';
 
 export const TOPICS = {
   REVIEW_JOB_REQUESTED: 'review-job-requested',
-  REVIEW_JOB_COMPLETED: 'review-job-completed',
-  AGENT_STATUS_UPDATE: 'agent-status-update',
+  REVIEW_JOB_FEEDBACK: 'review-job-feedback',
+  REVIEW_JOB_COMPLETED: 'review-completed',
+  AGENT_PROGRESS: 'agent-progress',
 };
 
 export interface ReviewJobRequestedMessage {

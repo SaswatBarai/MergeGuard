@@ -178,13 +178,25 @@ importers:
 
   packages/review-service:
     dependencies:
+      '@mergeguard/db':
+        specifier: workspace:*
+        version: link:../db
       '@mergeguard/events':
         specifier: workspace:*
         version: link:../events
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.6
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       express:
         specifier: ^4.18.0
         version: 4.22.2
     devDependencies:
+      '@types/cors':
+        specifier: ^2.8.19
+        version: 2.8.19
       '@types/express':
         specifier: ^4.17.0
         version: 4.17.25

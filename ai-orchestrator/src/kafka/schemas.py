@@ -8,3 +8,8 @@ class ReviewJobRequested(BaseModel):
     fullRepoName: str = Field(..., description="The full name of the repository (owner/repo)")
     branchName: str | None = Field(None, description="The branch name to review")
     githubToken: str = Field(..., description="The GitHub token to access the repository")
+
+
+class ReviewJobFeedback(BaseModel):
+    jobId: int = Field(..., description="The unique ID of the review job")
+    feedback: str = Field(..., description="The user's feedback or 'approve'")

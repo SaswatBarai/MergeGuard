@@ -5,13 +5,14 @@ import logging
 import redis.asyncio as aioredis
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
-from src.config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP_ID, TOPIC_REVIEW_JOB_REQUESTED
-from src.kafka.handlers import handle_review_job_requested
+from src.config import KAFKA_BOOTSTRAP_SERVERS, KAFKA_CONSUMER_GROUP_ID, TOPIC_REVIEW_JOB_REQUESTED, TOPIC_REVIEW_JOB_FEEDBACK
+from src.kafka.handlers import handle_review_job_requested, handle_review_job_feedback
 
 logger = logging.getLogger(__name__)
 
 TOPIC_HANDLERS = {
     TOPIC_REVIEW_JOB_REQUESTED: handle_review_job_requested,
+    TOPIC_REVIEW_JOB_FEEDBACK: handle_review_job_feedback,
 }
 
 

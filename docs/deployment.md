@@ -23,10 +23,36 @@ This document covers three parts:
                                      ▼
 Route53 → CloudFront → ALB → EKS Cluster (pods running your services)
                                      │
-                        RDS + Redis + RabbitMQ + S3
+                        RDS + Redis + Kafka + S3
 ```
 
-Once the platform is live at `api.mergeguard.io`, users install the CLI once and point it at that URL.
+Once the platform is live at `api.mergeguard.saswat.app`, users install the CLI once and point it at that URL.
+
+### Domain layout
+
+| URL | Purpose |
+|-----|---------|
+| `saswat.app` | Portfolio — unchanged |
+| `mergeguard.saswat.app` | Web dashboard |
+| `api.mergeguard.saswat.app` | Backend API |
+
+### DNS records (add in your registrar / Cloudflare)
+
+| Type | Name | Points to |
+|------|------|-----------|
+| CNAME | `mergeguard` | CloudFront distribution domain |
+| CNAME | `api.mergeguard` | ALB DNS name |
+
+### SSL certificate (free via AWS ACM)
+
+Request a wildcard cert that covers both subdomains at once:
+```bash
+aws acm request-certificate \
+  --domain-name "*.saswat.app" \
+  --validation-method DNS \
+  --region us-east-1
+```
+Then add the CNAME validation record your registrar shows — ACM auto-renews it.
 
 ---
 
@@ -34,9 +60,9 @@ Once the platform is live at `api.mergeguard.io`, users install the CLI once and
 
 ### Prerequisites
 
-- AWS account with IAM user that has EKS, ECR, RDS, ElastiCache, MQ, S3, VPC permissions
+- AWS account with IAM user that has EKS, ECR, RDS, ElastiCache, MSK, S3, VPC permissions
 - Tools installed: `aws-cli`, `kubectl`, `eksctl`, `terraform`, `docker`, `helm`
-- A domain name (e.g. `mergeguard.io`) registered in Route53
+- A domain name (e.g. `saswat.app`) registered in Route53
 
 ```bash
 # Verify tools
@@ -237,15 +263,20 @@ resource "aws_elasticache_cluster" "redis" {
   subnet_group_name = aws_elasticache_subnet_group.main.name
 }
 
-# Amazon MQ (RabbitMQ)
-resource "aws_mq_broker" "rabbitmq" {
-  broker_name    = "mergeguard-mq"
-  engine_type    = "RabbitMQ"
-  engine_version = "3.13"
-  host_instance_type = "mq.t3.micro"
-  user {
-    username = var.mq_username
-    password = var.mq_password
+# Amazon MSK (Kafka)
+resource "aws_msk_cluster" "kafka" {
+  cluster_name           = "mergeguard-kafka"
+  kafka_version          = "3.9.0"
+  number_of_broker_nodes = 2
+
+  broker_node_group_info {
+    instance_type   = "kafka.t3.small"
+    client_subnets  = module.vpc.private_subnets
+    storage_info {
+      ebs_storage_info {
+        volume_size = 20
+      }
+    }
   }
 }
 
@@ -306,11 +337,11 @@ spec:
                 secretKeyRef:
                   name: mergeguard-secrets
                   key: database-url
-            - name: RABBITMQ_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
               valueFrom:
                 secretKeyRef:
                   name: mergeguard-secrets
-                  key: rabbitmq-url
+                  key: kafka-bootstrap-servers
 ---
 apiVersion: v1
 kind: Service
@@ -338,7 +369,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
 spec:
   rules:
-    - host: api.mergeguard.io
+    - host: api.mergeguard.saswat.app
       http:
         paths:
           - path: /auth
@@ -355,7 +386,7 @@ spec:
                 name: api-gateway
                 port:
                   number: 3000
-    - host: app.mergeguard.io
+    - host: mergeguard.saswat.app
       http:
         paths:
           - path: /
@@ -383,11 +414,11 @@ kubectl apply -f k8s/
    ```
 
 2. **Route53** — create A records (alias):
-   - `api.mergeguard.io` → ALB DNS
-   - `app.mergeguard.io` → CloudFront distribution
+   - `api.mergeguard.saswat.app` → ALB DNS
+   - `mergeguard.saswat.app` → CloudFront distribution
 
 3. **CloudFront** — create a distribution:
-   - Origin: ALB DNS for `app.mergeguard.io`
+   - Origin: ALB DNS for `mergeguard.saswat.app`
    - Cache behavior: cache static assets (`_next/static/*`), bypass cache for API routes
 
 ---
@@ -402,10 +433,10 @@ kubectl get pods -n mergeguard
 kubectl get ingress -n mergeguard
 
 # Test the API
-curl https://api.mergeguard.io/health
+curl https://api.mergeguard.saswat.app/health
 
 # Test the frontend
-open https://app.mergeguard.io
+open https://mergeguard.saswat.app
 ```
 
 ---
@@ -614,12 +645,12 @@ git push --tags    # triggers GitHub Actions → auto-publishes
 ### Platform deployment
 - [ ] Dockerfiles written for all services
 - [ ] GitHub Actions CI/CD set up (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ACCOUNT_ID` secrets added)
-- [ ] Terraform provisioned: VPC, EKS, RDS, Redis, RabbitMQ, S3, ECR
+- [ ] Terraform provisioned: VPC, EKS, RDS, Redis, Kafka (MSK), S3, ECR
 - [ ] Kubernetes manifests deployed (`kubectl apply -f k8s/`)
 - [ ] Ingress has public ALB address
 - [ ] Route53 A records pointing to ALB and CloudFront
-- [ ] `https://api.mergeguard.io/health` returns 200
-- [ ] `https://app.mergeguard.io` loads the dashboard
+- [ ] `https://api.mergeguard.saswat.app/health` returns 200
+- [ ] `https://mergeguard.saswat.app` loads the dashboard
 
 ### Node.js CLI
 - [ ] `npm login` done
@@ -647,7 +678,7 @@ pip install mergeguard-cli    # Python CLI
 # Login (once) — point at your real deployed API
 mergeguard auth login
 #  > API key:  ●●●●●●●●●●●●
-#  > API URL:  https://api.mergeguard.io
+#  > API URL:  https://api.mergeguard.saswat.app
 
 # Review any PR — fully interactive, no flags
 mergeguard review

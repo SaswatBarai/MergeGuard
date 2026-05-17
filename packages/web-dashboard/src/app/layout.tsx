@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
-import Providers from "@/providers";
-import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({ 
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
-  variable: '--font-inter',
 });
 
 const poppins = Poppins({
-  weight: ['400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-poppins',
+  variable: "--font-heading",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "MergeGuard | AI-Powered Code Reviews",
-  description: "Next-gen automated code review platform for engineering teams.",
+  title: "MergeGuard - AI-powered merge protection",
+  description:
+    "MergeGuard catches risky pull requests before they land on main with conflict checks, policy gates, and AI review in one workflow.",
 };
 
 export default function RootLayout({
@@ -26,15 +26,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={cn(
-        "min-h-screen bg-background font-sans antialiased",
-        inter.variable,
-        poppins.variable
-      )}>
-        <Providers>
-          {children}
-        </Providers>
+    <html
+      lang="en"
+      className={`${inter.variable} ${poppins.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Runs before React hydrates — prevents flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');document.documentElement.classList.add(t==='light'?'light':'dark');}catch(e){document.documentElement.classList.add('dark');}})()`,
+          }}
+        />
+      </head>
+      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -1,86 +1,172 @@
 import { Command } from 'commander';
-import { input } from '@inquirer/prompts';
+import { input, password, select } from '@inquirer/prompts';
 import * as api from '../api.js';
+import * as config from '../config.js';
 import { ui } from '../utils/ui.js';
 
 export const registerReviewCommands = (program: Command) => {
   program
     .command('review')
-    .description('Trigger a new AI Code Review and watch its progress live')
-    .requiredOption('--pr <number>', 'Pull Request Number', parseInt)
-    .requiredOption('--repo-id <number>', 'Repository ID', parseInt)
-    .requiredOption('--full-name <string>', 'Repository Full Name (e.g., owner/repo)')
-    .option('--github-token <string>', 'GitHub Token (defaults to GITHUB_TOKEN env var)', process.env.GITHUB_TOKEN)
-    .requiredOption('--requester-id <number>', 'Requester User ID', parseInt)
-    .action(async (options) => {
-      const { pr, repoId, fullName, githubToken, requesterId } = options;
+    .description('Start an AI code review — guided, no flags needed')
+    .action(async () => {
+      ui.title('MergeGuard — Start a Review');
 
-      if (!githubToken) {
-        ui.error('Error: GitHub Token is required. Use --github-token or set GITHUB_TOKEN env var.');
+      // ── Step 1: resolve the authenticated user ───────────────────────────
+      ui.step(1, 4, 'Fetching your account…');
+      let me: { id: number; name: string };
+      try {
+        me = await api.getMe();
+        ui.success(`Signed in as ${me.name}`);
+      } catch (err: any) {
+        ui.error(err.message);
         process.exit(1);
       }
 
+      // ── Step 2: pick a repository ────────────────────────────────────────
+      ui.step(2, 4, 'Loading your repositories…');
+      let repos: Array<{ id: number; fullName: string; role: string }>;
       try {
-        ui.info(`Queueing Review for PR #${pr}...`);
-        const job = await api.createReview({
-          prNumber: pr,
-          repositoryId: repoId,
-          fullRepoName: fullName,
-          githubToken,
-          requesterId,
+        repos = await api.getMyRepositories();
+      } catch (err: any) {
+        ui.error('Could not load repositories: ' + err.message);
+        process.exit(1);
+      }
+
+      if (repos.length === 0) {
+        ui.warn('No repositories found. Connect a repo via the dashboard first.');
+        process.exit(1);
+      }
+
+      const repoChoice = await select({
+        message: 'Which repository?',
+        choices: repos.map((r) => ({
+          name: `${r.fullName}  (${r.role})`,
+          value: r,
+        })),
+      });
+
+      // ── Step 3: PR number ────────────────────────────────────────────────
+      ui.step(3, 4, 'Pull request details');
+      const prInput = await input({
+        message: 'PR number',
+        validate: (v) => (/^\d+$/.test(v.trim()) && Number(v) > 0) || 'Enter a positive integer',
+      });
+      const prNumber = Number(prInput.trim());
+
+      // ── Step 4: GitHub token ─────────────────────────────────────────────
+      ui.step(4, 4, 'GitHub access token');
+
+      let githubToken: string;
+      const storedToken = process.env.GITHUB_TOKEN || config.getGithubToken();
+
+      if (storedToken) {
+        ui.success('GitHub token already saved — using stored token.');
+        githubToken = storedToken;
+      } else {
+        githubToken = await password({
+          message: 'GitHub personal access token (needs repo read scope)',
+          mask: '●',
+          validate: (v) => v.trim().length > 5 || 'Token looks too short',
         });
+        config.setGithubToken(githubToken.trim());
+        ui.dim('Token saved — you won\'t be asked again.');
+      }
 
-        const jobId = job.id;
-        ui.success(`Job #${jobId} successfully queued!`);
+      // ── Queue the review ─────────────────────────────────────────────────
+      ui.divider();
+      ui.info(`Queueing review for ${repoChoice.fullName} PR #${prNumber}…`);
 
-        ui.info('Connecting to live stream...');
-        const es = api.getReviewStream(jobId);
+      let job: { id: number };
+      try {
+        job = await api.createReview({
+          prNumber,
+          repositoryId: repoChoice.id,
+          fullRepoName: repoChoice.fullName,
+          githubToken: githubToken.trim(),
+          requesterId: me.id,
+        });
+      } catch (err: any) {
+        ui.error('Failed to queue review: ' + (err.response?.data?.message ?? err.message));
+        process.exit(1);
+      }
 
-        es.onmessage = async (event) => {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'agent_progress') {
-            const agent = data.agent || 'System';
-            const status = data.status || '';
-            ui.dim(`[${agent}] ${status}...`);
+      ui.success(`Job #${job.id} queued! Connecting to live stream…`);
+      console.log(`  View in browser → http://localhost:3004/dashboard/review/${job.id}\n`);
 
-            if (status === 'pending_feedback') {
-              ui.warn(`\nAgent ${agent} is waiting for your feedback!`);
-              const feedback = await input({
-                message: "Please provide your feedback (or type 'Approve' to continue)",
-              });
-              await api.submitFeedback(jobId, feedback);
-              ui.success('Feedback submitted!');
-            }
+      // ── Live SSE stream ──────────────────────────────────────────────────
+      const es = api.getReviewStream(job.id);
+
+      es.onmessage = async (event) => {
+        let data: any;
+        try { data = JSON.parse(event.data); } catch { return; }
+
+        if (data.type === 'agent_progress') {
+          const agent  = data.agentName ?? data.agent ?? 'system';
+          const status = data.status ?? '';
+          ui.dim(`[${agent}] ${status}`);
+
+          if (status === 'pending_feedback') {
+            ui.warn(`\n${agent} needs your feedback to continue.`);
+            const feedback = await input({
+              message: "Your feedback (or type 'Approve' to continue)",
+            });
+            await api.submitFeedback(job.id, feedback);
+            ui.success('Feedback submitted!');
           }
+        }
 
-          if (data.type === 'job_completed') {
-            ui.success('\nReview completed!');
-            es.close();
-            
-            ui.info('Fetching final report...');
-            const finalJob = await api.getReview(jobId);
-            const report = finalJob.finalReport;
+        if (data.type === 'job_completed') {
+          es.close();
+          ui.divider();
+          ui.success('Review complete!');
 
-            if (report?.synthesizedSummary) {
-              ui.divider();
-              ui.title('Final AI Review Report');
-              console.log(report.synthesizedSummary);
-              ui.divider();
+          try {
+            const finalJob = await api.getReview(job.id);
+            const summary  = finalJob.finalReport?.synthesizedSummary;
+
+            if (summary) {
+              let parsed: any;
+              try { parsed = JSON.parse(summary); } catch { /* plain text */ }
+
+              if (parsed?.executive_summary) {
+                ui.title('Final Report');
+                ui.kv('Recommendation', parsed.overall_recommendation ?? '—');
+                console.log();
+                console.log('  ' + parsed.executive_summary);
+
+                if (parsed.critical_blockers?.length) {
+                  console.log('\n  Critical blockers:');
+                  parsed.critical_blockers.forEach((b: string) => ui.error('  · ' + b));
+                }
+                if (parsed.important_suggestions?.length) {
+                  console.log('\n  Suggestions:');
+                  parsed.important_suggestions.forEach((s: string) => ui.warn('  · ' + s));
+                }
+                if (parsed.minor_notes?.length) {
+                  console.log('\n  Notes:');
+                  parsed.minor_notes.forEach((n: string) => ui.dim('  · ' + n));
+                }
+              } else {
+                ui.title('Final Report');
+                console.log(summary);
+              }
             } else {
               ui.warn('No summary was generated.');
             }
+          } catch {
+            ui.warn('Could not fetch the final report.');
           }
-        };
 
-        es.onerror = (err) => {
-          ui.error(`SSE Stream Error: ${JSON.stringify(err)}`);
-          es.close();
-        };
+          ui.divider();
+          console.log(`  Full report → http://localhost:3004/dashboard/review/${job.id}\n`);
+          process.exit(0);
+        }
+      };
 
-      } catch (error: any) {
-        ui.error(`Error: ${error.message || error}`);
+      es.onerror = () => {
+        ui.error('Live stream disconnected. Check the review in the dashboard.');
+        es.close();
         process.exit(1);
-      }
+      };
     });
 };

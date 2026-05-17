@@ -1,35 +1,58 @@
-import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { updateJobProgress } from '@/store/reviewSlice';
+"use client"
 
-export const useReviewStream = (jobId: number | null) => {
-  const dispatch = useDispatch();
-  const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected');
+import { useEffect, useRef, useState } from "react"
+import { getStreamUrl } from "@/lib/api"
+
+export type StreamEvent =
+  | {
+      type: "agent_progress"
+      jobId: number
+      status: string
+      agentName?: string
+      [key: string]: unknown
+    }
+  | {
+      type: "job_completed"
+      jobId?: number
+      status: string
+      findings?: Array<{ agent_name: string; severity: string; content: string }>
+    }
+
+export function useReviewStream(reviewId: number, enabled: boolean) {
+  const [events, setEvents] = useState<StreamEvent[]>([])
+  const [lastEvent, setLastEvent] = useState<StreamEvent | null>(null)
+  const [connected, setConnected] = useState(false)
+  const esRef = useRef<EventSource | null>(null)
 
   useEffect(() => {
-    if (!jobId) return;
+    if (!enabled || !reviewId) return
 
-    setStatus('connecting');
-    const eventSource = new EventSource(`${process.env.NEXT_PUBLIC_API_URL}/api/reviews/${jobId}/stream`);
+    const url = getStreamUrl(reviewId)
+    const es = new EventSource(url)
+    esRef.current = es
 
-    eventSource.onopen = () => {
-      setStatus('connected');
-    };
+    es.onopen = () => setConnected(true)
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      dispatch(updateJobProgress({ jobId, progress: data }));
-    };
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data) as StreamEvent
+        setEvents((prev) => [...prev, data])
+        setLastEvent(data)
+      } catch {
+        // ignore malformed frames
+      }
+    }
 
-    eventSource.onerror = () => {
-      setStatus('disconnected');
-      eventSource.close();
-    };
+    es.onerror = () => {
+      setConnected(false)
+      es.close()
+    }
 
     return () => {
-      eventSource.close();
-    };
-  }, [jobId, dispatch]);
+      es.close()
+      setConnected(false)
+    }
+  }, [reviewId, enabled])
 
-  return { status };
-};
+  return { events, lastEvent, connected }
+}

@@ -2,32 +2,47 @@ import json
 import os
 from pathlib import Path
 
-CONFIG_DIR = Path.home() / ".config" / "mergeguard"
+CONFIG_DIR  = Path.home() / ".config" / "mergeguard"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 
-def load_config():
+
+def _load() -> dict:
     if not CONFIG_FILE.exists():
         return {}
-    with open(CONFIG_FILE, "r") as f:
+    with open(CONFIG_FILE) as f:
         return json.load(f)
 
-def save_config(config_data):
+
+def _save(data: dict) -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     with open(CONFIG_FILE, "w") as f:
-        json.dump(config_data, f, indent=2)
+        json.dump(data, f, indent=2)
 
-def get_api_key():
-    return load_config().get("api_key")
 
-def set_api_key(api_key):
-    config = load_config()
-    config["api_key"] = api_key
-    save_config(config)
+def _set(key: str, value: str) -> None:
+    cfg = _load()
+    cfg[key] = value
+    _save(cfg)
 
-def get_api_url():
-    return load_config().get("api_url", os.getenv("MERGEGUARD_API_URL", "http://localhost:3000"))
 
-def set_api_url(url):
-    config = load_config()
-    config["api_url"] = url
-    save_config(config)
+def get_api_key() -> str | None:
+    return _load().get("api_key")
+
+def set_api_key(key: str) -> None:
+    _set("api_key", key)
+
+def get_api_url() -> str:
+    return _load().get("api_url", os.getenv("MERGEGUARD_API_URL", "http://localhost:3000"))
+
+def set_api_url(url: str) -> None:
+    _set("api_url", url)
+
+def get_github_token() -> str | None:
+    return _load().get("github_token")
+
+def set_github_token(token: str) -> None:
+    _set("github_token", token)
+
+def clear_config() -> None:
+    if CONFIG_FILE.exists():
+        CONFIG_FILE.unlink()

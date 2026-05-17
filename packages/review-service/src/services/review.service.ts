@@ -44,6 +44,28 @@ export class ReviewService {
     });
   }
 
+  static async listReviewsByUser(requesterId: number) {
+    return prisma.reviewJob.findMany({
+      where: { requesterId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        agentResults: { select: { id: true, agentName: true, severity: true } },
+        finalReport: { select: { synthesizedSummary: true } },
+        repository: { select: { fullName: true } },
+      },
+    });
+  }
+
+  static async cancelReview(jobId: number, requesterId: number) {
+    const job = await prisma.reviewJob.findUnique({ where: { id: jobId } });
+    if (!job) return { error: 'not_found' };
+    if (job.requesterId !== requesterId) return { error: 'forbidden' };
+    if (job.status !== 'QUEUED') return { error: 'not_queued' };
+    await prisma.reviewJob.update({ where: { id: jobId }, data: { status: 'CANCELLED' } });
+    return { ok: true };
+  }
+
   static async submitFeedback(jobId: number, feedback: string) {
     await kafka.publish(TOPICS.REVIEW_JOB_FEEDBACK, {
       jobId,

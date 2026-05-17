@@ -31,8 +31,14 @@ export const setupKafkaConsumer = async () => {
       if (topic === TOPICS.REVIEW_JOB_COMPLETED) {
         const { status, findings } = payload;
 
+        // Map orchestrator status to DB enum values
+        const dbStatus = status === 'summarized' ? 'PENDING_FEEDBACK'
+          : status === 'completed' ? 'COMPLETED'
+          : status === 'failed' ? 'FAILED'
+          : status.toUpperCase();
+
         // 1. Update Database
-        await ReviewService.updateJobStatus(jobId, status.toUpperCase());
+        await ReviewService.updateJobStatus(jobId, dbStatus);
 
         // 2. Save Agent Findings & Summary
         if (findings && Array.isArray(findings)) {
@@ -47,8 +53,8 @@ export const setupKafkaConsumer = async () => {
           }
         }
 
-        // 3. Broadcast final status
-        sseService.broadcast(jobId, { type: 'job_completed', status });
+        // 3. Broadcast final status to SSE clients
+        sseService.broadcast(jobId, { type: 'job_completed', status: dbStatus, findings });
       }
     },
   });

@@ -3,7 +3,8 @@ import logging
 from typing import List, Dict, Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from langchain_anthropic import ChatAnthropic
-from src.config import ANTHROPIC_API_KEY
+from langchain_google_genai import ChatGoogleGenerativeAI
+from src.config import ANTHROPIC_API_KEY, GOOGLE_API_KEY, LLM_PROVIDER
 from src.orchestrator.state import AgentFinding
 
 logger = logging.getLogger(__name__)
@@ -16,11 +17,22 @@ env = Environment(
 
 class LLMService:
     def __init__(self):
-        self.llm = ChatAnthropic(
-            model="claude-3-sonnet-20240229",
-            anthropic_api_key=ANTHROPIC_API_KEY,
-            temperature=0
-        )
+        if LLM_PROVIDER == "anthropic":
+            logger.info("Initializing Anthropic LLM (Claude 3.5 Sonnet)")
+            self.llm = ChatAnthropic(
+                model="claude-3-5-sonnet-20240620",
+                anthropic_api_key=ANTHROPIC_API_KEY,
+                temperature=0
+            )
+        elif LLM_PROVIDER == "google":
+            logger.info("Initializing Google LLM (Gemini 2.5 Flash)")
+            self.llm = ChatGoogleGenerativeAI(
+                model="gemini-2.5-flash",
+                google_api_key=GOOGLE_API_KEY,
+                temperature=0
+            )
+        else:
+            raise ValueError(f"Unsupported LLM provider: {LLM_PROVIDER}")
 
     def _render_prompt(self, template_name: str, context: Dict[str, Any]) -> str:
         template = env.get_template(template_name)
@@ -47,17 +59,20 @@ class LLMService:
         })
         
         try:
-            # We use a simple prompt for now, but in a real scenario we'd use structured output features
-            # Claude 3 is very good at following JSON instructions in the prompt.
             response = await self.llm.ainvoke(prompt)
-            content = response.content
+            content = response.content.strip()
             
             # Basic JSON extraction from response
-            # Claude might wrap JSON in backticks
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
+
+            # Handle cases where the model might add text before or after the JSON array
+            start_idx = content.find("[")
+            end_idx = content.rfind("]")
+            if start_idx != -1 and end_idx != -1:
+                content = content[start_idx:end_idx+1]
             
             findings = json.loads(content)
             return findings
@@ -65,7 +80,7 @@ class LLMService:
             logger.error("LLM invocation failed for %s: %s", agent_type, exc)
             return []
 
-    async def get_summary(self, context_profile: Dict[str, Any], all_findings: Dict[str, List[AgentFinding]]) -> Dict[str, Any]:
+    async def get_summary(self, context_profile: Dict[str, Any], all_findings: Dict[Dict[str, Any], List[AgentFinding]]) -> Dict[str, Any]:
         """
         Synthesizes all agent findings into a cohesive executive summary.
         """
@@ -76,12 +91,18 @@ class LLMService:
         
         try:
             response = await self.llm.ainvoke(prompt)
-            content = response.content
+            content = response.content.strip()
             
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0].strip()
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
+
+            # Handle cases where the model might add text before or after the JSON object
+            start_idx = content.find("{")
+            end_idx = content.rfind("}")
+            if start_idx != -1 and end_idx != -1:
+                content = content[start_idx:end_idx+1]
             
             summary = json.loads(content)
             return summary

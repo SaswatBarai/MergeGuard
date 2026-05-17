@@ -12,82 +12,71 @@ from src.orchestrator.nodes import (
     feedback_node
 )
 
+AGENT_NODES = ["security", "performance", "testing", "architecture", "readability"]
+_NODE_FN = {
+    "security": security_node,
+    "performance": performance_node,
+    "testing": testing_node,
+    "architecture": architecture_node,
+    "readability": readability_node,
+}
+
 def should_continue(state: ReviewState):
-    """
-    Determines whether to continue to specialized agents or halt on failure.
-    """
     if state.get("status") == "failed":
         return "end"
-    return "continue"
+    return "analyze"
+
+async def router_node(state: ReviewState) -> dict:
+    """Passthrough node — exists solely to fan-out edges to all parallel agents."""
+    return {}
 
 def route_after_feedback(state: ReviewState):
-    """
-    Routes the graph based on user feedback.
-    """
     if state.get("status") == "completed":
         return "end"
-    
-    # If not completed, we need to decide which agents to re-run.
-    # For now, if feedback is provided, we re-run ALL agents with the feedback context.
     return "re-run"
 
 def create_orchestrator_graph():
-    # 1. Initialize the graph with our State schema
     workflow = StateGraph(ReviewState)
 
-    # 2. Add all nodes
+    # Nodes
     workflow.add_node("discovery", discovery_node)
-    workflow.add_node("security", security_node)
-    workflow.add_node("performance", performance_node)
-    workflow.add_node("testing", testing_node)
-    workflow.add_node("architecture", architecture_node)
-    workflow.add_node("readability", readability_node)
+    workflow.add_node("router", router_node)
+    for name, fn in _NODE_FN.items():
+        workflow.add_node(name, fn)
     workflow.add_node("summary", summary_node)
     workflow.add_node("feedback", feedback_node)
 
-    # 3. Define the edges (the flow)
-    
-    # Start at discovery
+    # Entry
     workflow.set_entry_point("discovery")
 
-    # Conditional routing after discovery
+    # discovery → router (or END on failure)
     workflow.add_conditional_edges(
         "discovery",
         should_continue,
-        {
-            "continue": ["security", "performance", "testing", "architecture", "readability"],
-            "end": END
-        }
+        {"analyze": "router", "end": END}
     )
 
-    # All specialized agents converge at the summary node
-    workflow.add_edge("security", "summary")
-    workflow.add_edge("performance", "summary")
-    workflow.add_edge("testing", "summary")
-    workflow.add_edge("architecture", "summary")
-    workflow.add_edge("readability", "summary")
+    # router fans out to all agents in parallel
+    for name in AGENT_NODES:
+        workflow.add_edge("router", name)
 
-    # Summary goes to feedback
+    # All agents converge at summary
+    for name in AGENT_NODES:
+        workflow.add_edge(name, "summary")
+
     workflow.add_edge("summary", "feedback")
 
-    # Conditional routing after feedback
+    # feedback → re-run router (or END)
     workflow.add_conditional_edges(
         "feedback",
         route_after_feedback,
-        {
-            "re-run": ["security", "performance", "testing", "architecture", "readability"],
-            "end": END
-        }
+        {"re-run": "router", "end": END}
     )
 
-    # 4. Initialize Checkpointer
     memory = MemorySaver()
-
-    # 5. Compile the graph with checkpointer and interrupt
     return workflow.compile(
         checkpointer=memory,
         interrupt_before=["feedback"]
     )
 
-# Singleton instance
 orchestrator_runnable = create_orchestrator_graph()

@@ -27,6 +27,17 @@ export class ReviewController {
     }
   }
 
+  static async listReviews(req: Request, res: Response) {
+    const requesterId = parseInt(req.query.requesterId as string);
+    if (!requesterId) { res.status(400).json({ error: 'requesterId required' }); return; }
+    try {
+      const jobs = await ReviewService.listReviewsByUser(requesterId);
+      res.json(jobs);
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
   static async getReview(req: Request, res: Response) {
     const { id } = req.params;
     try {
@@ -51,6 +62,23 @@ export class ReviewController {
     req.on('close', () => {
       sseService.removeClient(client);
     });
+  }
+
+  static async cancelReview(req: Request, res: Response) {
+    const jobId = parseInt(req.params.id);
+    const requesterId = parseInt(req.body.requesterId);
+    if (!requesterId) { res.status(400).json({ error: 'requesterId required' }); return; }
+    try {
+      const result = await ReviewService.cancelReview(jobId, requesterId);
+      if (result.error === 'not_found') { res.status(404).json({ error: 'Review not found' }); return; }
+      if (result.error === 'forbidden') { res.status(403).json({ error: 'Not your review' }); return; }
+      if (result.error === 'not_queued') { res.status(409).json({ error: 'Only QUEUED jobs can be cancelled' }); return; }
+      sseService.broadcast(jobId, { type: 'job_completed', status: 'CANCELLED' });
+      res.json({ status: 'CANCELLED' });
+    } catch (error) {
+      console.error('Failed to cancel review:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
   }
 
   static async submitFeedback(req: Request, res: Response) {

@@ -7,6 +7,8 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 REDIS_KEY_TTL = int(os.getenv("REDIS_KEY_TTL", "3600"))
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "google") # Default to google for development
 
 TOPIC_REVIEW_JOB_REQUESTED = "review-job-requested"
 TOPIC_REVIEW_JOB_FEEDBACK = "review-job-feedback"

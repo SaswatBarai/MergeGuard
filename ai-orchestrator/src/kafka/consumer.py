@@ -29,34 +29,54 @@ def _build_consumer() -> Consumer:
 
 async def start_consumer(redis: aioredis.Redis) -> None:
     loop = asyncio.get_event_loop()
-    consumer: Consumer = await loop.run_in_executor(None, _build_consumer)
+    
+    # Retry logic for building the consumer
+    consumer = None
+    while consumer is None:
+        try:
+            consumer = await loop.run_in_executor(None, _build_consumer)
+        except Exception as e:
+            logger.error("Failed to build Kafka consumer: %s. Retrying in 5s...", e)
+            await asyncio.sleep(5)
+
     consumer.subscribe(list(TOPIC_HANDLERS.keys()))
     logger.info("Kafka consumer subscribed to topics: %s", list(TOPIC_HANDLERS.keys()))
 
     try:
         while True:
-            msg = await loop.run_in_executor(None, lambda: consumer.poll(1.0))
-            if msg is None:
-                await asyncio.sleep(0)
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
-                    continue
-                raise KafkaException(msg.error())
-
-            topic = msg.topic()
-            handler = TOPIC_HANDLERS.get(topic)
-            if not handler:
-                logger.warning("No handler registered for topic '%s'", topic)
-                continue
-
             try:
-                payload = json.loads(msg.value().decode("utf-8"))
-                await handler(payload, redis)
-            except (json.JSONDecodeError, UnicodeDecodeError) as exc:
-                logger.error("Failed to decode message on topic '%s': %s", topic, exc)
+                msg = await loop.run_in_executor(None, lambda: consumer.poll(1.0))
+                if msg is None:
+                    await asyncio.sleep(0)
+                    continue
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        continue
+                    logger.error("Kafka error: %s", msg.error())
+                    # If it's a fatal error, we might want to break or continue after a sleep
+                    await asyncio.sleep(2)
+                    continue
+
+                topic = msg.topic()
+                handler = TOPIC_HANDLERS.get(topic)
+                if not handler:
+                    logger.warning("No handler registered for topic '%s'", topic)
+                    continue
+
+                try:
+                    payload = json.loads(msg.value().decode("utf-8"))
+                    await handler(payload, redis)
+                except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+                    logger.error("Failed to decode message on topic '%s': %s", topic, exc)
+                except Exception as exc:
+                    logger.error("Handler error on topic '%s': %s", topic, exc, exc_info=True)
+            except Exception as e:
+                logger.error("Unexpected error in Kafka consumer loop: %s", e, exc_info=True)
+                await asyncio.sleep(5)
+                
     except asyncio.CancelledError:
         logger.info("Kafka consumer loop cancelled")
     finally:
-        await loop.run_in_executor(None, consumer.close)
+        if consumer:
+            await loop.run_in_executor(None, consumer.close)
         logger.info("Kafka consumer closed")

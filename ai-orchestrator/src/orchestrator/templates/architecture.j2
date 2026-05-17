@@ -55,7 +55,7 @@ Before writing findings, silently work through:
 - **Fat views**: Views doing ORM queries and business logic — move to service layer or model managers.
 - **Signal overuse**: New Django signals for logic that should be in a service method (signals obscure flow).
 - **Model responsibility**: Business logic inconsistently split between model methods and service functions.
-- **URL coupling**: Hardcoded URL strings instead of `reverse()` / `{% url %}`.
+- **URL coupling**: Hardcoded URL strings instead of `reverse()` / `{% raw %}{% url %}{% endraw %}`.
 
 {% elif 'FastAPI' in profile.frameworks %}
 ### FastAPI

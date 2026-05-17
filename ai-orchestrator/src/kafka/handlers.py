@@ -72,9 +72,11 @@ async def handle_review_job_requested(payload: dict, redis: aioredis.Redis) -> N
             "findings_count": len(findings)
         })
         
-        if status == "completed" or status == "failed":
+        # Publish completion for terminal and checkpoint states so the review-service
+        # can update the DB and broadcast SSE events to connected clients.
+        if status in ("completed", "failed", "summarized"):
             _publish_completion(job_id, status, findings)
-        
+
         logger.info("Job %s: AI orchestration reached checkpoint/completion with status %s", job_id, status)
         
     except Exception as exc:

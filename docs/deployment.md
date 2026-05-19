@@ -26,7 +26,7 @@ Route53 → CloudFront → ALB → EKS Cluster (pods running your services)
                         RDS + Redis + Kafka + S3
 ```
 
-Once the platform is live at `api.mergeguard.saswat.app`, users install the CLI once and point it at that URL.
+Once the platform is live at `api-mergeguard.saswat.app`, users install the CLI once and point it at that URL.
 
 ### Domain layout
 
@@ -34,7 +34,7 @@ Once the platform is live at `api.mergeguard.saswat.app`, users install the CLI 
 |-----|---------|
 | `saswat.app` | Portfolio — unchanged |
 | `mergeguard.saswat.app` | Web dashboard |
-| `api.mergeguard.saswat.app` | Backend API |
+| `api-mergeguard.saswat.app` | Backend API |
 
 ### DNS records (add in your registrar / Cloudflare)
 
@@ -369,7 +369,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
 spec:
   rules:
-    - host: api.mergeguard.saswat.app
+    - host: api-mergeguard.saswat.app
       http:
         paths:
           - path: /auth
@@ -414,7 +414,7 @@ kubectl apply -f k8s/
    ```
 
 2. **Route53** — create A records (alias):
-   - `api.mergeguard.saswat.app` → ALB DNS
+   - `api-mergeguard.saswat.app` → ALB DNS
    - `mergeguard.saswat.app` → CloudFront distribution
 
 3. **CloudFront** — create a distribution:
@@ -433,7 +433,7 @@ kubectl get pods -n mergeguard
 kubectl get ingress -n mergeguard
 
 # Test the API
-curl https://api.mergeguard.saswat.app/health
+curl https://api-mergeguard.saswat.app/health
 
 # Test the frontend
 open https://mergeguard.saswat.app
@@ -649,7 +649,7 @@ git push --tags    # triggers GitHub Actions → auto-publishes
 - [ ] Kubernetes manifests deployed (`kubectl apply -f k8s/`)
 - [ ] Ingress has public ALB address
 - [ ] Route53 A records pointing to ALB and CloudFront
-- [ ] `https://api.mergeguard.saswat.app/health` returns 200
+- [ ] `https://api-mergeguard.saswat.app/health` returns 200
 - [ ] `https://mergeguard.saswat.app` loads the dashboard
 
 ### Node.js CLI
@@ -678,7 +678,7 @@ pip install mergeguard-cli    # Python CLI
 # Login (once) — point at your real deployed API
 mergeguard auth login
 #  > API key:  ●●●●●●●●●●●●
-#  > API URL:  https://api.mergeguard.saswat.app
+#  > API URL:  https://api-mergeguard.saswat.app
 
 # Review any PR — fully interactive, no flags
 mergeguard review

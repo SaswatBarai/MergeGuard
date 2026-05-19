@@ -1,0 +1,329 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: mergeguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: 221045608158.dkr.ecr.us-east-1.amazonaws.com/mergeguard-auth-service:latest
+          ports:
+            - containerPort: 3001
+          env:
+            - name: PORT
+              value: "3001"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: JWT_SECRET
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: GITHUB_CLIENT_ID
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: GITHUB_CLIENT_SECRET
+            - name: GITHUB_REDIRECT_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: GITHUB_REDIRECT_URI
+            - name: FRONTEND_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: FRONTEND_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: mergeguard
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - port: 3001
+      targetPort: 3001
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: review-service
+  namespace: mergeguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: review-service
+  template:
+    metadata:
+      labels:
+        app: review-service
+    spec:
+      containers:
+        - name: review-service
+          image: 221045608158.dkr.ecr.us-east-1.amazonaws.com/mergeguard-review-service:latest
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: "3002"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: JWT_SECRET
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: FRONTEND_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: FRONTEND_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: review-service
+  namespace: mergeguard
+spec:
+  selector:
+    app: review-service
+  ports:
+    - port: 3002
+      targetPort: 3002
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: mergeguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: 221045608158.dkr.ecr.us-east-1.amazonaws.com/mergeguard-notification-service:latest
+          ports:
+            - containerPort: 3003
+          env:
+            - name: PORT
+              value: "3003"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: DATABASE_URL
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: GITHUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: GITHUB_TOKEN
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: RESEND_API_KEY
+            - name: FRONTEND_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: FRONTEND_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: mergeguard
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - port: 3003
+      targetPort: 3003
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: mergeguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: 221045608158.dkr.ecr.us-east-1.amazonaws.com/mergeguard-api-gateway:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: PORT
+              value: "3000"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: JWT_SECRET
+            - name: AUTH_SERVICE_URL
+              value: "http://auth-service:3001"
+            - name: REVIEW_SERVICE_URL
+              value: "http://review-service:3002"
+            - name: NOTIFICATION_SERVICE_URL
+              value: "http://notification-service:3003"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: mergeguard
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 3000
+      targetPort: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-dashboard
+  namespace: mergeguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-dashboard
+  template:
+    metadata:
+      labels:
+        app: web-dashboard
+    spec:
+      containers:
+        - name: web-dashboard
+          image: 221045608158.dkr.ecr.us-east-1.amazonaws.com/mergeguard-web-dashboard:latest
+          ports:
+            - containerPort: 3004
+          env:
+            - name: PORT
+              value: "3004"
+            - name: NEXT_PUBLIC_API_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: NEXT_PUBLIC_API_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-dashboard
+  namespace: mergeguard
+spec:
+  selector:
+    app: web-dashboard
+  ports:
+    - port: 3004
+      targetPort: 3004
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-orchestrator
+  namespace: mergeguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-orchestrator
+  template:
+    metadata:
+      labels:
+        app: ai-orchestrator
+    spec:
+      containers:
+        - name: ai-orchestrator
+          image: 221045608158.dkr.ecr.us-east-1.amazonaws.com/mergeguard-ai-orchestrator:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: REDIS_URL
+            - name: LLM_PROVIDER
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: LLM_PROVIDER
+            - name: GOOGLE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: GOOGLE_API_KEY
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mergeguard-secrets
+                  key: ANTHROPIC_API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-orchestrator
+  namespace: mergeguard
+spec:
+  selector:
+    app: ai-orchestrator
+  ports:
+    - port: 8000
+      targetPort: 8000
